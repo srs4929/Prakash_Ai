@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Box, Typography, Paper, Button, Stack, Card, CardContent, 
+  Box, Typography, Button, Stack, Card, CardContent, 
   LinearProgress, Alert, alpha, useTheme 
 } from '@mui/material';
 import { CheckCircleOutline, HighlightOff } from '@mui/icons-material';

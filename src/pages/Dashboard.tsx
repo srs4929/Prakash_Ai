@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Paper, Stack, Avatar, Button, Divider } from '@mui/material';
+import { Box, Typography, Paper, Stack, Avatar} from '@mui/material';
 import { EmojiEvents, Quiz, FactCheck, Star } from '@mui/icons-material';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 

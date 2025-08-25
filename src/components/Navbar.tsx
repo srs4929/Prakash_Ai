@@ -21,9 +21,9 @@ import {
   Menu as MenuIcon,
   Brightness4 as DarkModeIcon,
   Brightness7 as LightModeIcon,
-  Login as LoginIcon,
-  PersonAdd as SignupIcon,
-  ExitToApp as LogoutIcon,
+ // Login as LoginIcon,
+ // PersonAdd as SignupIcon,
+ // ExitToApp as LogoutIcon,
 } from '@mui/icons-material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
