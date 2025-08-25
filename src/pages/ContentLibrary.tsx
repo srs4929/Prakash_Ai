@@ -1,8 +1,10 @@
+import React from 'react';
 import { Box, Typography, Card, CardContent, CardMedia, Chip, CardActionArea } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-import digitalLiteracy from '../assets/Digital-Literacy-Landscape.png';
-import fakeNewsHeadline from '../assets/fake-news-headline.jpg';
+// ✅ Public folder images: just use strings with BASE_URL
+const digitalLiteracy = import.meta.env.BASE_URL + 'assets/Digital-Literacy-Landscape.png';
+const fakeNewsHeadline = import.meta.env.BASE_URL + 'assets/fake-news-headline.jpg';
 
 const mockContent = [
   {
@@ -21,10 +23,7 @@ const mockContent = [
     category: "Guide",
     readingTime: "15 mins",
   },
-  
 ];
-
-import React from 'react';
 
 const ContentLibrary: React.FC = () => {
   const navigate = useNavigate();
@@ -40,9 +39,9 @@ const ContentLibrary: React.FC = () => {
         gridTemplateColumns: {
           xs: '1fr',
           sm: 'repeat(2, 1fr)',
-          md: 'repeat(3, 1fr)'
+          md: 'repeat(3, 1fr)',
         },
-        gap: 3
+        gap: 3,
       }}>
         {mockContent.map((content) => (
           <Card 
@@ -55,7 +54,7 @@ const ContentLibrary: React.FC = () => {
               '&:hover': {
                 transform: 'translateY(-4px)',
                 boxShadow: (theme) => theme.shadows[4],
-              }
+              },
             }}
           >
             <CardActionArea 

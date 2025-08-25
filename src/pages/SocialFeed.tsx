@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Box,
@@ -7,18 +8,25 @@ import {
   Avatar,
   Stack,
   IconButton,
-  Tooltip,
   Divider,
   TextField,
   Button,
   Paper,
+  useTheme,
 } from '@mui/material';
+import { alpha } from '@mui/system'; // Import alpha function
 import {
   ThumbUp as ThumbUpIcon,
   ThumbUpOutlined as ThumbUpOutlinedIcon,
   ThumbDown as ThumbDownIcon,
   ThumbDownOutlined as ThumbDownOutlinedIcon,
 } from '@mui/icons-material';
+
+interface Comment {
+  user: string;
+  content: string;
+  timestamp: string;
+}
 
 interface Post {
   id: number;
@@ -28,6 +36,7 @@ interface Post {
   timestamp: string;
   likes: number;
   dislikes: number;
+  comments?: Comment[];
   userInteraction?: {
     liked: boolean;
     disliked: boolean;
@@ -43,6 +52,10 @@ const initialMockPosts: Post[] = [
     timestamp: "2 hours ago",
     likes: 45,
     dislikes: 5,
+    comments: [
+      { user: "Alice", content: "Great job!", timestamp: "1 hour ago" },
+      { user: "Bob", content: "Thanks for sharing!", timestamp: "30 mins ago" },
+    ],
   },
   {
     id: 2,
@@ -51,22 +64,7 @@ const initialMockPosts: Post[] = [
     timestamp: "5 hours ago",
     likes: 32,
     dislikes: 3,
-  },
-  {
-    id: 3,
-    user: "FactHunter",
-    content: "Always verify before sharing news online. #FactCheck",
-    timestamp: "1 day ago",
-    likes: 21,
-    dislikes: 2,
-  },
-  {
-    id: 4,
-    user: "KnowledgeGuru",
-    content: "Misinformation spreads faster than facts. Stay alert!",
-    timestamp: "2 days ago",
-    likes: 18,
-    dislikes: 1,
+    comments: [],
   },
 ];
 
@@ -79,12 +77,13 @@ const SocialFeed: React.FC = () => {
   );
   const [newPost, setNewPost] = useState("");
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [newComment, setNewComment] = useState<{ [key: number]: string }>({});
+  const theme = useTheme();
 
-  // Login state from localStorage
   const isGuest = !!localStorage.getItem('guestMode');
   const isLoggedIn = !!localStorage.getItem('token') || isGuest;
 
-  // Handle post creation
+  // Handle new post creation
   const handleCreatePost = () => {
     if (!isLoggedIn) {
       alert("You must be logged in to post!");
@@ -93,7 +92,7 @@ const SocialFeed: React.FC = () => {
     if (!newPost.trim() && mediaFiles.length === 0) return;
 
     const media = mediaFiles.map(file => ({
-      type: (file.type.startsWith("video") ? "video" : "image") as "video" | "image",
+      type: file.type.startsWith("video") ? "video" : "image" as 'image' | 'video',
       url: URL.createObjectURL(file),
     }));
 
@@ -105,6 +104,7 @@ const SocialFeed: React.FC = () => {
       timestamp: "Just now",
       likes: 0,
       dislikes: 0,
+      comments: [],
       userInteraction: { liked: false, disliked: false },
     };
 
@@ -113,9 +113,9 @@ const SocialFeed: React.FC = () => {
     setMediaFiles([]);
   };
 
-  // Like/Dislike handlers
+  // Handle like/dislike
   const handleLike = (postId: number) => {
-    if (!isLoggedIn) return; // only logged-in users can like
+    if (!isLoggedIn) return;
     setPosts(currentPosts =>
       currentPosts.map(post => {
         if (post.id === postId) {
@@ -134,7 +134,7 @@ const SocialFeed: React.FC = () => {
   };
 
   const handleDislike = (postId: number) => {
-    if (!isLoggedIn) return; // only logged-in users can dislike
+    if (!isLoggedIn) return;
     setPosts(currentPosts =>
       currentPosts.map(post => {
         if (post.id === postId) {
@@ -152,15 +152,36 @@ const SocialFeed: React.FC = () => {
     );
   };
 
+  // Add comment
+  const handleAddComment = (postId: number) => {
+    const commentText = newComment[postId]?.trim();
+    if (!commentText) return;
+
+    setPosts(prev =>
+      prev.map(post => {
+        if (post.id === postId) {
+          const updatedComments = [
+            ...(post.comments || []),
+            { user: isGuest ? "Guest" : "CurrentUser", content: commentText, timestamp: "Just now" },
+          ];
+          return { ...post, comments: updatedComments };
+        }
+        return post;
+      })
+    );
+
+    setNewComment(prev => ({ ...prev, [postId]: "" }));
+  };
+
   return (
-    <Box sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 4, fontWeight: 700 }}>
+    <Box sx={{ p: 3, maxWidth: 700, mx: 'auto', backgroundColor: theme.palette.background.default, minHeight: '100vh' }}>
+      <Typography variant="h4" gutterBottom sx={{ mb: 4, fontWeight: 700, color: theme.palette.text.primary }}>
         Social Feed
       </Typography>
 
-      {/* Conditional Post Form */}
+      {/* New Post */}
       {isLoggedIn ? (
-        <Card sx={{ p: 2, mb: 4, borderRadius: 3, boxShadow: 2 }}>
+        <Card sx={{ p: 2, mb: 4, borderRadius: 4, boxShadow: 3, backgroundColor: theme.palette.background.paper }}>
           <TextField
             multiline
             minRows={3}
@@ -168,103 +189,121 @@ const SocialFeed: React.FC = () => {
             fullWidth
             value={newPost}
             onChange={(e) => setNewPost(e.target.value)}
+            sx={{ mb: 2, backgroundColor: alpha(theme.palette.background.paper, 0.8), borderRadius: 1 }}
           />
+          {/* Media preview */}
+          {mediaFiles.map((file, idx) => (
+            <Box key={idx} sx={{ mb: 1 }}>
+              {file.type.startsWith("image") ? (
+                <img src={URL.createObjectURL(file)} alt="preview" style={{ width: '100%', borderRadius: 8 }} />
+              ) : (
+                <video src={URL.createObjectURL(file)} controls style={{ width: '100%', borderRadius: 8 }} />
+              )}
+            </Box>
+          ))}
           <input
             type="file"
             accept="image/*,video/*"
             multiple
             onChange={(e) => e.target.files && setMediaFiles(Array.from(e.target.files))}
-            style={{ marginTop: "16px" }}
+            style={{ marginBottom: '12px' }}
           />
-          <Button variant="contained" sx={{ mt: 2 }} onClick={handleCreatePost}>
+          <Button variant="contained" fullWidth onClick={handleCreatePost} sx={{ backgroundColor: theme.palette.primary.main, '&:hover': { backgroundColor: theme.palette.primary.dark } }}>
             Post
           </Button>
         </Card>
       ) : (
-        <Paper sx={{ p: 2, mb: 4, borderRadius: 3, textAlign: 'center' }}>
-          <Typography color="text.secondary">
+        <Paper sx={{ p: 2, mb: 4, borderRadius: 3, textAlign: 'center', backgroundColor: theme.palette.background.paper, color: theme.palette.text.secondary }}>
+          <Typography color="inherit">
             You must be logged in to create a post.
           </Typography>
         </Paper>
       )}
 
-      {/* Display Posts */}
+      {/* Posts */}
       <Stack spacing={3}>
-        {posts.map((post) => (
-          <Card
-            key={post.id}
-            sx={{
-              borderRadius: 3,
-              boxShadow: 2,
-              transition: '0.3s',
-              '&:hover': { boxShadow: 6, transform: 'translateY(-3px)' },
-            }}
-          >
+        {posts.map(post => (
+          <Card key={post.id} sx={{
+            borderRadius: 4,
+            boxShadow: 3,
+            transition: '0.3s',
+            '&:hover': { boxShadow: 6, transform: 'translateY(-2px)' },
+            backgroundColor: theme.palette.background.paper,
+            color: theme.palette.text.primary,
+          }}>
             <CardContent>
-              {/* User Info */}
+              {/* User info */}
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Avatar
-                  sx={{
-                    mr: 2,
-                    bgcolor: 'primary.main',
-                    width: 48,
-                    height: 48,
-                    fontWeight: 700,
-                    fontSize: 18,
-                    borderRadius: 2,
-                  }}
-                >
+                <Avatar sx={{ mr: 2, bgcolor: theme.palette.primary.main, width: 48, height: 48, fontWeight: 700, fontSize: 18 }}>
                   {post.user[0]}
                 </Avatar>
                 <Box>
-                  <Typography variant="h6">{post.user}</Typography>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, color: theme.palette.text.primary }}>{post.user}</Typography>
                   <Typography variant="caption" color="text.secondary">{post.timestamp}</Typography>
                 </Box>
               </Box>
 
               {/* Content */}
-              <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.6 }}>
-                {post.content}
-              </Typography>
+              <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.6, color: theme.palette.text.primary }}>{post.content}</Typography>
 
               {/* Media */}
-              {post.media?.map((item, index) => (
-                <Box key={index} sx={{ mb: 2 }}>
-                  {item.type === "image" ? (
-                    <img src={item.url} alt="post media" style={{ maxWidth: "100%", borderRadius: 8 }} />
+              {post.media?.map((item, idx) => (
+                <Box key={idx} sx={{ mb: 2 }}>
+                  {item.type === 'image' ? (
+                    <img src={item.url} alt="media" style={{ width: '100%', borderRadius: 8 }} />
                   ) : (
-                    <video src={item.url} controls style={{ maxWidth: "100%", borderRadius: 8 }} />
+                    <video src={item.url} controls style={{ width: '100%', borderRadius: 8 }} />
                   )}
                 </Box>
               ))}
 
-              <Divider sx={{ mb: 1 }} />
+              <Divider sx={{ my: 1, borderColor: theme.palette.divider }} />
 
               {/* Like / Dislike */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                <Tooltip title="Like">
-                  <IconButton
-                    onClick={() => handleLike(post.id)}
-                    color={post.userInteraction?.liked ? 'primary' : 'default'}
-                    size="medium"
-                    disabled={!isLoggedIn}
-                  >
+              <Box sx={{ display: 'flex', justifyContent: 'space-around', mt: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <IconButton onClick={() => handleLike(post.id)} color={post.userInteraction?.liked ? 'primary' : 'default'}>
                     {post.userInteraction?.liked ? <ThumbUpIcon /> : <ThumbUpOutlinedIcon />}
                   </IconButton>
-                </Tooltip>
-                <Typography variant="body2" color="text.secondary">{post.likes}</Typography>
-
-                <Tooltip title="Dislike">
-                  <IconButton
-                    onClick={() => handleDislike(post.id)}
-                    color={post.userInteraction?.disliked ? 'error' : 'default'}
-                    size="medium"
-                    disabled={!isLoggedIn}
-                  >
+                  <Typography variant="body2" color={theme.palette.text.secondary}>{post.likes}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <IconButton onClick={() => handleDislike(post.id)} color={post.userInteraction?.disliked ? 'error' : 'default'}>
                     {post.userInteraction?.disliked ? <ThumbDownIcon /> : <ThumbDownOutlinedIcon />}
                   </IconButton>
-                </Tooltip>
-                <Typography variant="body2" color="text.secondary">{post.dislikes}</Typography>
+                  <Typography variant="body2" color={theme.palette.text.secondary}>{post.dislikes}</Typography>
+                </Box>
+              </Box>
+
+              {/* Comments */}
+              <Box sx={{ mt: 2 }}>
+                {post.comments?.map((comment, cIdx) => (
+                  <Box key={cIdx} sx={{ p: 2, mb: 1, borderRadius: 2, bgcolor: alpha(theme.palette.background.paper, 0.3), border: `1px solid ${theme.palette.divider}` }}>
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                      <Avatar sx={{ width: 32, height: 32, mr: 1, bgcolor: theme.palette.primary.main }}>
+                        {comment.user[0]}
+                      </Avatar>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: theme.palette.text.primary }}>{comment.user}</Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>{comment.timestamp}</Typography>
+                    </Box>
+                    <Typography variant="body2" color={theme.palette.text.primary}>{comment.content}</Typography>
+                  </Box>
+                ))}
+
+                {/* Add comment input */}
+                <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
+                  <TextField
+                    placeholder="Write a comment..."
+                    size="small"
+                    fullWidth
+                    value={newComment[post.id] || ""}
+                    onChange={(e) => setNewComment(prev => ({ ...prev, [post.id]: e.target.value }))}
+                    sx={{ bgcolor: alpha(theme.palette.background.paper, 0.6), borderRadius: 2, "& .MuiOutlinedInput-notchedOutline": { border: "none" } }}
+                  />
+                  <Button sx={{ ml: 1 }} variant="contained" size="small" onClick={() => handleAddComment(post.id)} color="primary">
+                    Comment
+                  </Button>
+                </Box>
               </Box>
             </CardContent>
           </Card>
