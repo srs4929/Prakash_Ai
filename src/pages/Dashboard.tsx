@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Paper, Stack, Avatar} from '@mui/material';
+import { Box, Typography, Paper, Stack, Avatar } from '@mui/material';
 import { EmojiEvents, Quiz, FactCheck, Star } from '@mui/icons-material';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -31,7 +31,9 @@ const Dashboard: React.FC = () => {
         }}
       >
         <Stack direction="row" alignItems="center" spacing={2}>
-          <Avatar sx={{ bgcolor: 'white', color: '#4facfe', width: 56, height: 56 }}>User</Avatar>
+          <Avatar sx={{ bgcolor: 'white', color: '#4facfe', width: 56, height: 56 }}>
+            User
+          </Avatar>
           <Box>
             <Typography variant="h5" fontWeight="bold">
               Welcome, User!
@@ -40,17 +42,6 @@ const Dashboard: React.FC = () => {
           </Box>
         </Stack>
       </Paper>
-
-      {/* Quick Actions */}
-      {/* <Paper sx={{ p: 3, mb: 4, borderRadius: 3, boxShadow: 3 }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>Quick Actions</Typography>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <Button variant="contained" color="primary">Start Quiz</Button>
-          <Button variant="contained" color="success">Post Content</Button>
-          <Button variant="contained" color="warning">Upload for AI Verification</Button>
-          <Button variant="contained" color="secondary">View Guidelines</Button>
-        </Stack>
-      </Paper> */}
 
       {/* Top Stats / Progress Cards */}
       <Box
@@ -102,9 +93,19 @@ const Dashboard: React.FC = () => {
         <Typography variant="h6" sx={{ mb: 2 }}>Quiz Analytics</Typography>
         <ResponsiveContainer width="100%" height={200}>
           <PieChart>
-            <Pie data={analyticsData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} label>
+            <Pie
+              data={analyticsData}
+              dataKey="value"
+              nameKey="name"
+              innerRadius={50}
+              outerRadius={80}
+              label
+            >
               {analyticsData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={index === 0 ? "#4caf50" : "#f44336"} />
+                <Cell
+                  key={`cell-${index}`}
+                  fill={entry.name === 'Correct' ? '#4caf50' : '#f44336'}
+                />
               ))}
             </Pie>
             <Tooltip />
